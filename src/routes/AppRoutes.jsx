@@ -21,9 +21,7 @@ function AppRoutes() {
           <Route path="settings" element={<Settings />} />
           <Route path="billing" element={<Billing />} />
           <Route path="customers" element={<Customers />} />
-          <Route
-  path="/app/bill-history"
-  element={<BillHistory />}
+          <Route path="/bill-history" element={<BillHistory />}
 />
         </Route>
       </Routes>
