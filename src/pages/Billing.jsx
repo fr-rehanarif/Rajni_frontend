@@ -3,34 +3,23 @@ import api from '../services/api';
 import './Billing.css';
 
 const Billing = () => {
-  // ... (Keep all your existing states)
   const [mobile, setMobile] = useState('');
   const [customer, setCustomer] = useState(null);
-  const [customerLoading, setCustomerLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [cart, setCart] = useState([]);
-  const [discountPercent, setDiscountPercent] = useState(0);
-  const [paymentMode, setPaymentMode] = useState('Cash');
-  const [amountPaid, setAmountPaid] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  const [customerLoading, setCustomerLoading] = useState(false);
 
-  // FIXED: Customer fetcher - Ensure you check your F12 console to match this path
   const fetchCustomer = useCallback(async (mobileNumber) => {
     if (mobileNumber.length !== 10) return;
     setCustomerLoading(true);
     try {
       const response = await api.get(`/customers/mobile/${mobileNumber}`);
-      // Based on your previous context, we use response.data if the object is flat,
-      // or response.data.customer if it is nested.
+      console.log("API Customer Response:", response.data); // CHECK THIS IN F12 CONSOLE
+      
+      // Update this path based on your console log
       const data = response.data.customer || response.data;
-      if (data && data.name) {
-        setCustomer({ ...data, isNew: false });
-      } else {
-        setCustomer({ mobile: mobileNumber, name: '', isNew: true });
-      }
+      setCustomer(data);
     } catch (error) {
       setCustomer({ mobile: mobileNumber, name: '', isNew: true });
     } finally {
@@ -38,7 +27,15 @@ const Billing = () => {
     }
   }, []);
 
-  // ... (Keep your existing addToCart, removeCartItem, etc.)
+  const handleMobileChange = (e) => {
+    const val = e.target.value.replace(/\D/g, '');
+    setMobile(val);
+    if (val.length === 10) fetchCustomer(val);
+  };
+
+  const addToCart = (product) => {
+    setCart((prev) => [...prev, { ...product, qty: 1, amount: product.sale_price }]);
+  };
 
   return (
     <div className="billing-container">
@@ -47,43 +44,38 @@ const Billing = () => {
       </header>
 
       <main className="billing-layout">
-        {/* NEW LEFT PANEL: INVENTORY/SEARCH */}
-        <section className="inventory-panel">
-          <div className="search-section">
-            <input
-              type="text"
-              placeholder="Search Inventory (F3)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="product-search-input"
-            />
-            {showSuggestions && (
-              <ul className="search-dropdown">
-                {searchResults.map((p) => (
-                  <li key={p.id} onClick={() => addToCart(p)}>
-                    {p.name} - ₹{p.sale_price}
-                  </li>
-                ))}
-              </ul>
-            )}
+        {/* LEFT: INVENTORY */}
+        <section className="inventory-panel glassmorphism">
+          <h3>Inventory</h3>
+          <input
+            className="product-search-input"
+            placeholder="Search Inventory..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <div className="results-area">
+            {searchResults.map(p => <div key={p.id} onClick={() => addToCart(p)}>{p.name}</div>)}
           </div>
-          {/* Add a full inventory grid or list here if needed */}
         </section>
 
-        {/* NEW RIGHT PANEL: CUSTOMER & CART */}
+        {/* RIGHT: CART & CUSTOMER */}
         <section className="cart-panel">
           <div className="customer-card glassmorphism">
-            {/* ... Customer inputs ... */}
-          </div>
-          
-          <div className="cart-section glassmorphism">
-            <table className="cart-table">
-               {/* ... Your existing table ... */}
-            </table>
+            <h3>Customer</h3>
+            <input value={mobile} onChange={handleMobileChange} placeholder="10 Digit Mobile" />
+            {customer && <p className="customer-name">Name: {customer.name || "New Customer"}</p>}
           </div>
 
-          <div className="summary-card glassmorphism">
-            {/* ... Summary & Payment ... */}
+          <div className="cart-section glassmorphism">
+            <h3>Cart</h3>
+            <table className="cart-table">
+              <thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
+              <tbody>
+                {cart.map((item, i) => (
+                  <tr key={i}><td>{item.name}</td><td>{item.qty}</td><td>₹{item.amount}</td></tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       </main>
