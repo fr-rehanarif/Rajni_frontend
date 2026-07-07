@@ -25,7 +25,6 @@ function Sidebar() {
         <NavLink to="/app/billing"><ReceiptText /></NavLink>
         <NavLink to="/app/inventory"><Package /></NavLink>
         <NavLink to="/app/customers"><Users /></NavLink>
-        <NavLink to="/app/reports"><BarChart3 /></NavLink>
         <NavLink to="/app/expenses"><IndianRupee /></NavLink>
         <NavLink to="/app/settings"><Settings /></NavLink>
         <NavLink to="/app/bill-history"><ReceiptText /></NavLink>
