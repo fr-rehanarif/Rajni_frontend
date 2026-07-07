@@ -31,9 +31,9 @@ function Billing() {
 
       const data = await res.json();
 
+      // FIXED: Look for 'products' instead of 'items' to match Inventory.jsx
       if (data.success) {
-        // Safety net: ensure items is always an array
-        setItems(data.items || []);
+        setItems(data.products || []); 
       } else {
         setMessage(data.message || "Items load nahi hue");
       }
