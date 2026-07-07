@@ -1,78 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import api from '../services/api';
-import './Billing.css';
+import React from 'react';
+import './BillingPage.css';
 
-const Billing = () => {
-  const [mobile, setMobile] = useState('');
-  const [customer, setCustomer] = useState({ name: '', isNew: true });
-  const [inventory, setInventory] = useState([]); // State for all items
-  const [cart, setCart] = useState([]);
-
-  // 1. Fetch ALL inventory on mount
-  useEffect(() => {
-    const fetchInventory = async () => {
-      try {
-        const res = await api.get('/products'); // Ensure this route exists in backend
-        setInventory(res.data.products || res.data);
-      } catch (err) {
-        console.error("Failed to load inventory", err);
-      }
-    };
-    fetchInventory();
-  }, []);
-
-  const handleMobileChange = (e) => {
-    const val = e.target.value.replace(/\D/g, '');
-    setMobile(val);
-    if (val.length === 10) {
-      api.get(`/customers/mobile/${val}`)
-        .then(res => setCustomer({ name: res.data.customer?.name || 'Unknown', isNew: false }))
-        .catch(() => setCustomer({ name: 'New Customer', isNew: true }));
-    }
-  };
-
-  const addToCart = (product) => {
-    setCart([...cart, { ...product, qty: 1 }]);
-  };
-
+const BillingPage = () => {
   return (
-    <div className="billing-container">
-      <header className="billing-header">
-        <h1>Rajni Saree Center POS</h1>
+    <div className="pos-billing-page">
+      {/* Header - Consistent with Dashboard */}
+      <header className="pos-header">
+        <div className="header-left">
+          <h1>Rajni Saree Center</h1>
+          <p>Luxury Saree POS Command Center</p>
+        </div>
+        <div className="header-right">
+          <button className="user-btn">Manager1</button>
+        </div>
       </header>
 
-      <div className="billing-layout">
-        {/* Left: Inventory List */}
-        <section className="panel inventory-panel">
-          <h3>Inventory</h3>
-          <div className="inventory-grid">
-            {inventory.map((item) => (
-              <div key={item.id} className="product-card" onClick={() => addToCart(item)}>
-                <h4>{item.name}</h4>
-                <p>₹{item.sale_price}</p>
-              </div>
-            ))}
+      {/* Main Content Grid */}
+      <main className="billing-content">
+        
+        {/* Left: Inventory */}
+        <section className="inventory-panel">
+          <div className="pos-card">
+            <h2>Inventory</h2>
+            <div className="product-grid">
+              {/* Add your product mapping logic here */}
+              <div className="product-item">Titan Black</div>
+              <div className="product-item">Test Product</div>
+            </div>
           </div>
         </section>
 
         {/* Right: Customer & Cart */}
-        <section className="right-column">
-          <div className="panel customer-panel">
+        <aside className="sidebar-panel">
+          <div className="pos-card">
             <h3>Customer</h3>
-            <input value={mobile} onChange={handleMobileChange} placeholder="10 Digit Mobile" />
-            <p className="customer-name">{customer.name}</p>
+            <input type="text" placeholder="10 Digit Mobile" className="pos-input" />
           </div>
-
-          <div className="panel cart-panel">
+          
+          <div className="pos-card mt-20">
             <h3>Cart</h3>
-            {cart.map((item, i) => (
-              <div key={i}>{item.name} - ₹{item.sale_price}</div>
-            ))}
+            <div className="cart-items">
+              {/* Cart logic here */}
+              <p className="empty-msg">Cart is empty</p>
+            </div>
           </div>
-        </section>
-      </div>
+        </aside>
+
+      </main>
     </div>
   );
 };
 
-export default Billing;
+export default BillingPage;
