@@ -23,7 +23,7 @@ function Billing() {
 
   const fetchItems = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/items", {
+      const res = await fetch("https://rajni-backend.onrender.com/api/items", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -50,7 +50,7 @@ function Billing() {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/customers/mobile/${mobile}`,
+        `https://rajni-backend.onrender.com/api/customers/mobile/${mobile}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -196,7 +196,7 @@ function Billing() {
     try {
       setMessage("Bill save ho raha hai...");
 
-      const res = await fetch("http://localhost:5000/api/bills", {
+      const res = await fetch("https://rajni-backend.onrender.com/api/bills", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
