@@ -61,12 +61,24 @@
 }
 
 /* Layout Grid */
+/* Update your main layout grid */
 .billing-layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 450px; /* Wider right panel for Cart */
   gap: 1.5rem;
   flex: 1;
-  align-items: start;
+}
+
+.inventory-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cart-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 /* Glassmorphism Utility */
