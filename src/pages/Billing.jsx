@@ -5,29 +5,34 @@ import './Billing.css';
 const Billing = () => {
   const [mobile, setMobile] = useState('');
   const [customer, setCustomer] = useState({ name: '', isNew: true });
-  const [loading, setLoading] = useState(false);
+  const [inventory, setInventory] = useState([]); // State for all items
+  const [cart, setCart] = useState([]);
 
-  // Logic to fetch customer
-  const fetchCustomer = async (mobileNum) => {
-    if (mobileNum.length !== 10) return;
-    setLoading(true);
-    try {
-      const res = await api.get(`/customers/mobile/${mobileNum}`);
-      // Handle response structure (if it's {customer: {name: ...}} or direct)
-      const data = res.data.customer || res.data;
-      setCustomer({ name: data.name || 'Unknown', isNew: false });
-    } catch (err) {
-      // If 404, it means customer doesn't exist, show as New Customer
-      setCustomer({ name: 'New Customer', isNew: true });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // 1. Fetch ALL inventory on mount
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const res = await api.get('/products'); // Ensure this route exists in backend
+        setInventory(res.data.products || res.data);
+      } catch (err) {
+        console.error("Failed to load inventory", err);
+      }
+    };
+    fetchInventory();
+  }, []);
 
   const handleMobileChange = (e) => {
     const val = e.target.value.replace(/\D/g, '');
     setMobile(val);
-    if (val.length === 10) fetchCustomer(val);
+    if (val.length === 10) {
+      api.get(`/customers/mobile/${val}`)
+        .then(res => setCustomer({ name: res.data.customer?.name || 'Unknown', isNew: false }))
+        .catch(() => setCustomer({ name: 'New Customer', isNew: true }));
+    }
+  };
+
+  const addToCart = (product) => {
+    setCart([...cart, { ...product, qty: 1 }]);
   };
 
   return (
@@ -37,35 +42,32 @@ const Billing = () => {
       </header>
 
       <div className="billing-layout">
-        {/* Left: Inventory Section */}
+        {/* Left: Inventory List */}
         <section className="panel inventory-panel">
           <h3>Inventory</h3>
-          <input className="product-search-input" placeholder="Search Inventory..." />
+          <div className="inventory-grid">
+            {inventory.map((item) => (
+              <div key={item.id} className="product-card" onClick={() => addToCart(item)}>
+                <h4>{item.name}</h4>
+                <p>₹{item.sale_price}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* Right: Customer & Cart */}
         <section className="right-column">
           <div className="panel customer-panel">
             <h3>Customer</h3>
-            <input 
-              value={mobile} 
-              onChange={handleMobileChange} 
-              placeholder="10 Digit Mobile"
-              maxLength={10}
-            />
-            {mobile.length === 10 && (
-              <p className={`customer-status ${customer.isNew ? 'new' : 'existing'}`}>
-                {customer.name}
-              </p>
-            )}
+            <input value={mobile} onChange={handleMobileChange} placeholder="10 Digit Mobile" />
+            <p className="customer-name">{customer.name}</p>
           </div>
 
           <div className="panel cart-panel">
             <h3>Cart</h3>
-            <table className="cart-table">
-              <thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
-              <tbody>{/* Add cart rows here */}</tbody>
-            </table>
+            {cart.map((item, i) => (
+              <div key={i}>{item.name} - ₹{item.sale_price}</div>
+            ))}
           </div>
         </section>
       </div>
