@@ -32,7 +32,8 @@ function Billing() {
       const data = await res.json();
 
       if (data.success) {
-        setItems(data.items);
+        // Safety net: ensure items is always an array
+        setItems(data.items || []);
       } else {
         setMessage(data.message || "Items load nahi hue");
       }
@@ -60,7 +61,7 @@ function Billing() {
 
       const data = await res.json();
 
-      if (data.success) {
+      if (data.success && data.customer) {
         setCustomer({
           name: data.customer.name,
           mobile: data.customer.mobile,
@@ -82,7 +83,8 @@ function Billing() {
     fetchItems();
   }, []);
 
-  const filteredItems = items.filter((item) => {
+  // Safety net: ensure we only filter if items exists
+  const filteredItems = (items || []).filter((item) => {
     const itemName = String(item.item_name || "").toLowerCase();
     const itemCode = String(item.item_code || "").toLowerCase();
     const searchValue = search.toLowerCase();
@@ -112,8 +114,7 @@ function Billing() {
             ? {
                 ...cartItem,
                 qty: cartItem.qty + 1,
-                amount:
-                  (cartItem.qty + 1) * Number(cartItem.sale_price),
+                amount: (cartItem.qty + 1) * Number(cartItem.sale_price),
               }
             : cartItem
         )
@@ -215,10 +216,7 @@ function Billing() {
       const savedBillId = data.bill_id;
 
       setCart([]);
-      setCustomer({
-        name: "",
-        mobile: "",
-      });
+      setCustomer({ name: "", mobile: "" });
       setCustomerFound("");
       setDiscount(0);
       setPaymentMode("Cash");
@@ -251,19 +249,13 @@ function Billing() {
               <div className="item-card" key={item.id}>
                 <div>
                   <h3>{item.item_name}</h3>
-
                   <p>
-                    {item.item_code} • {item.category} • Pieces:{" "}
-                    {item.stock_qty}
+                    {item.item_code} • {item.category} • Pieces: {item.stock_qty}
                   </p>
                 </div>
-
                 <div>
                   <strong>₹{item.sale_price}</strong>
-
-                  <button onClick={() => addToCart(item)}>
-                    Add
-                  </button>
+                  <button onClick={() => addToCart(item)}>Add</button>
                 </div>
               </div>
             ))}
@@ -277,34 +269,21 @@ function Billing() {
             <input
               placeholder="Customer Name"
               value={customer.name}
-              onChange={(e) =>
-                setCustomer({
-                  ...customer,
-                  name: e.target.value,
-                })
-              }
+              onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
             />
-
             <input
               placeholder="Mobile Number"
               value={customer.mobile}
               onChange={(e) => {
                 const mobile = e.target.value;
-
-                setCustomer({
-                  ...customer,
-                  mobile,
-                });
-
+                setCustomer({ ...customer, mobile });
                 searchCustomerByMobile(mobile);
               }}
             />
           </div>
 
           {customerFound && (
-            <div className="customer-found">
-              {customerFound}
-            </div>
+            <div className="customer-found">{customerFound}</div>
           )}
 
           <div className="cart-list">
@@ -317,21 +296,14 @@ function Billing() {
                     <strong>{item.item_name}</strong>
                     <p>₹{item.sale_price}</p>
                   </div>
-
                   <input
                     type="number"
                     min="1"
                     value={item.qty}
-                    onChange={(e) =>
-                      updateQty(item.id, e.target.value)
-                    }
+                    onChange={(e) => updateQty(item.id, e.target.value)}
                   />
-
                   <strong>₹{item.amount}</strong>
-
-                  <button onClick={() => removeFromCart(item.id)}>
-                    X
-                  </button>
+                  <button onClick={() => removeFromCart(item.id)}>X</button>
                 </div>
               ))
             )}
@@ -342,10 +314,8 @@ function Billing() {
               <span>Subtotal</span>
               <strong>₹{subtotal}</strong>
             </div>
-
             <div>
               <span>Discount (%)</span>
-
               <input
                 type="number"
                 min="0"
@@ -354,12 +324,10 @@ function Billing() {
                 onChange={(e) => setDiscount(e.target.value)}
               />
             </div>
-
             <div>
               <span>Discount Amount</span>
               <strong>₹{discountAmount}</strong>
             </div>
-
             <div>
               <span>Grand Total</span>
               <strong>₹{grandTotal}</strong>
@@ -381,9 +349,7 @@ function Billing() {
             Save Bill
           </button>
 
-          {message && (
-            <div className="page-message">{message}</div>
-          )}
+          {message && <div className="page-message">{message}</div>}
         </div>
       </div>
     </div>
