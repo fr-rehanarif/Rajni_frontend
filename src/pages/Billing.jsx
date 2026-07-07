@@ -1,5 +1,5 @@
 import React from 'react';
-import './BillingPage.css';
+import './Billing.css';
 
 const BillingPage = () => {
   return (
