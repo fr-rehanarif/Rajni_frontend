@@ -38,47 +38,28 @@ const Billing = () => {
   };
 
   return (
-    <div className="billing-container">
-      <header className="billing-header">
-        <h1>Rajni Saree Center POS</h1>
-      </header>
+    <div className="billing-container" style={{ height: '100vh', display: 'flex', flexDirection: 'column', padding: '20px' }}>
+      <header><h1>Rajni Saree Center POS</h1></header>
 
-      <main className="billing-layout">
-        {/* LEFT: INVENTORY */}
-        <section className="inventory-panel glassmorphism">
+      {/* Force layout with direct styles to debug CSS issues */}
+      <div className="billing-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '20px', flexGrow: 1, marginTop: '20px' }}>
+        
+        <section className="inventory-panel" style={{ background: '#fff', padding: '20px', borderRadius: '15px', border: '1px solid #ddd' }}>
           <h3>Inventory</h3>
-          <input
-            className="product-search-input"
-            placeholder="Search Inventory..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <div className="results-area">
-            {searchResults.map(p => <div key={p.id} onClick={() => addToCart(p)}>{p.name}</div>)}
-          </div>
+          <input className="product-search-input" placeholder="Search Inventory..." style={{ width: '100%', padding: '10px' }} />
         </section>
 
-        {/* RIGHT: CART & CUSTOMER */}
-        <section className="cart-panel">
-          <div className="customer-card glassmorphism">
+        <section className="cart-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="customer-card" style={{ background: '#fff', padding: '20px', borderRadius: '15px', border: '1px solid #ddd' }}>
             <h3>Customer</h3>
-            <input value={mobile} onChange={handleMobileChange} placeholder="10 Digit Mobile" />
-            {customer && <p className="customer-name">Name: {customer.name || "New Customer"}</p>}
+            <input placeholder="10 Digit Mobile" style={{ width: '100%', padding: '10px' }} />
           </div>
-
-          <div className="cart-section glassmorphism">
+          
+          <div className="cart-section" style={{ background: '#fff', padding: '20px', borderRadius: '15px', border: '1px solid #ddd', flexGrow: 1 }}>
             <h3>Cart</h3>
-            <table className="cart-table">
-              <thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
-              <tbody>
-                {cart.map((item, i) => (
-                  <tr key={i}><td>{item.name}</td><td>{item.qty}</td><td>₹{item.amount}</td></tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 };
