@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./Billing.css";
 
 function Billing() {
   const navigate = useNavigate();
