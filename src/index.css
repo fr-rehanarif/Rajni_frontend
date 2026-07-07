@@ -181,64 +181,6 @@ body {
   overflow: auto;
 }
 
-/* ── Live panel (right sidebar) ── */
-.live-panel {
-  width: 300px;
-  min-width: 300px;
-  border-radius: 28px;
-  padding: 22px;
-  background: #1c1713;
-  color: #fff;
-  box-shadow: 0 18px 50px rgba(30, 20, 10, 0.18);
-  overflow: hidden;
-}
-
-.live-panel h3 {
-  margin-top: 0;
-  color: #f6d778;
-}
-
-.insight-card {
-  padding: 18px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.08);
-  margin-bottom: 14px;
-}
-
-.insight-card span {
-  color: #d8c8ae;
-  font-size: 13px;
-}
-
-.insight-card strong {
-  display: block;
-  margin-top: 8px;
-  font-size: 24px;
-  color: #f6d778;
-}
-
-.insight-card.warning strong {
-  color: #ffb36b;
-}
-
-.quick-bill-btn {
-  width: 100%;
-  margin-top: 12px;
-  padding: 15px;
-  border: 0;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #d4af37, #8b641a);
-  color: #191512;
-  font-weight: 900;
-  cursor: pointer;
-  font-size: 15px;
-  transition: opacity 0.15s;
-}
-
-.quick-bill-btn:hover {
-  opacity: 0.88;
-}
-
 /* ============================================================
    PAGE HEAD (shared across all pages)
    ============================================================ */
@@ -1153,7 +1095,7 @@ body {
 /* ============================================================
    BILLING / POS
    ============================================================ */
-
+/*
 .pos-billing-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(360px, 440px);
@@ -1171,7 +1113,7 @@ body {
 }
 
 /* search + inputs */
-.pos-item-search,
+/*.pos-item-search,
 .pos-customer-grid input,
 .payment-mode-select-light {
   width: 100%;
@@ -1193,7 +1135,7 @@ body {
 }
 
 /* product list */
-.pos-product-list {
+/*.pos-product-list {
   margin-top: 18px;
   display: flex;
   flex-direction: column;
@@ -1248,7 +1190,7 @@ body {
 .pos-product-price button:hover { opacity: 0.85; }
 
 /* cart panel */
-.pos-cart-panel h2 {
+/*.pos-cart-panel h2 {
   margin-top: 0;
   font-size: 26px;
 }
@@ -1325,7 +1267,7 @@ body {
 .pos-cart-item button:hover { opacity: 0.85; }
 
 /* summary */
-.pos-summary {
+/*.pos-summary {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1403,7 +1345,7 @@ body {
   text-align: center;
   font-size: 14px;
 }
-
+*/
 /* ============================================================
    INVOICE MODAL — A4 POS STYLE
    ============================================================ */
