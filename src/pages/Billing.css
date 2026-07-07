@@ -90,3 +90,19 @@
   background: #d4af37;
   border-radius: 10px;
 }
+.billing-container { height: 100vh; padding: 20px; background: #fdfbf7; display: flex; flex-direction: column; }
+.billing-layout { display: grid; grid-template-columns: 1fr 400px; gap: 20px; flex-grow: 1; margin-top: 20px; }
+
+.inventory-panel, .cart-panel { display: flex; flex-direction: column; gap: 20px; }
+
+/* Boxes */
+.inventory-panel, .customer-card, .cart-section { 
+  background: #fff; padding: 20px; border-radius: 15px; border: 1px solid #ddd;
+}
+
+.cart-section { flex-grow: 1; }
+.product-search-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+
+.customer-name-display { 
+  margin-top: 10px; font-weight: bold; color: #D4AF37; font-size: 1.2rem; 
+}
