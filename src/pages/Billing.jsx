@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import api from '../api';
+import api from "../services/api";
 
 const LOW_STOCK_THRESHOLD = 5;
 const DEFAULT_GST = 5;
