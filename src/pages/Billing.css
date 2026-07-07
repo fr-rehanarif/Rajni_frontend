@@ -118,3 +118,69 @@ body {
     font-weight: bold;
     text-align: center;
 }
+/* Billing.css */
+:root {
+  --primary-gold: #d4af37;
+  --dark-bronze: #4a4430;
+  --bg-color: #f9f7f2;
+}
+
+.billing-page {
+  padding: 20px;
+  background-color: var(--bg-color);
+  min-height: 100vh;
+}
+
+.billing-header {
+  background: linear-gradient(to right, #2a261f, var(--dark-bronze));
+  padding: 2rem;
+  border-radius: 1rem;
+  color: white;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.billing-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 2rem;
+}
+
+.card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.search-input {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 2rem;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: var(--primary-gold);
+}
+
+.gold-btn {
+  background: linear-gradient(to bottom right, var(--primary-gold), #b8860b);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
