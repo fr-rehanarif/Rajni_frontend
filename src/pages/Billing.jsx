@@ -39,9 +39,13 @@ const Billing = () => {
     setCustomerError(null);
     try {
       const response = await api.get(`/customers/mobile/${mobileNumber}`);
-      if (response.data) {
+      
+      // Unwrap the nested 'customer' object from your backend response
+      const customerData = response.data.customer || response.data;
+
+      if (customerData && customerData.name) {
         setCustomer({
-          ...response.data,
+          ...customerData,
           isNew: false
         });
       } else {
