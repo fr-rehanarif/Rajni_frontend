@@ -23,7 +23,7 @@ function Billing() {
 
   const fetchItems = async () => {
     try {
-      const res = await fetch("https://rajni-backend.onrender.com/api/items", {
+      const res = await fetch("https://rajni-backend.onrender.com/api/products", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
