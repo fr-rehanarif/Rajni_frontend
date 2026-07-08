@@ -101,23 +101,23 @@ function Billing() {
   }
 
   try {
-const billData = {
-  customerName: customer.name,
-  customerMobile: customer.mobile,
+    const billData = {
+      customerName: customer.name,
+      customerMobile: customer.mobile,
 
-  items: cart.map((item) => ({
-    product_id: item.id,
-    product_name: item.name,
-    qty: item.qty,
-    rate: item.selling_price,
-    amount: item.amount,
-  })),
+      items: cart.map((item) => ({
+        product_id: item.id || item._id,
+        product_name: item.name,
+        qty: item.qty,
+        rate: item.selling_price,
+        amount: item.amount,
+      })),
 
-  subtotal,
-  discountPercent: Number(discount),
-  grandTotal,
-  paymentMode,
-};
+      subtotal,
+      discountPercent: Number(discount),
+      grandTotal,
+      paymentMode,
+    };
 
     const res = await fetch(
       "https://rajni-backend.onrender.com/api/sales",
@@ -132,9 +132,10 @@ const billData = {
     );
 
     const data = await res.json();
+    console.log(data);
 
     if (data.success) {
-      navigate(`/bill-print/${data.billid}`);
+      navigate(`/bill-print/${data.id}`);
     } else {
       setMessage(data.message || "Failed to save bill");
     }
@@ -143,7 +144,6 @@ const billData = {
     setMessage("Something went wrong");
   }
 };
-
   return (
     <div className="billing-page">
       <div className="billing-header">
