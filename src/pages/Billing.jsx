@@ -1,98 +1,63 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Billing.css"; // Ensure this file has the CSS from our previous discussion
+import "./Billing.css";
 
 function Billing() {
   const navigate = useNavigate();
-
   const [items, setItems] = useState([]);
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
-  const [message, setMessage] = useState("");
   const [customer, setCustomer] = useState({ name: "", mobile: "" });
   const [discount, setDiscount] = useState(0);
   const [paymentMode, setPaymentMode] = useState("Cash");
 
   const token = localStorage.getItem("token");
 
+  // Fetch products
   const fetchItems = async () => {
     try {
       const res = await fetch("https://rajni-backend.onrender.com/api/products", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (data.success) {
-        setItems(data.products || []);
-      }
+      if (data.success) setItems(data.products || []);
     } catch (error) {
-      console.error("Items fetch error:", error);
+      console.error("Fetch error:", error);
     }
   };
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
+  useEffect(() => { fetchItems(); }, []);
 
-  const filteredItems = (items || []).filter((item) => {
-    const name = String(item.name || "").toLowerCase();
-    const searchValue = search.toLowerCase();
-    return name.includes(searchValue);
-  });
+  const filteredItems = items.filter((i) => 
+    i.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   const addToCart = (item) => {
-    if (Number(item.stock) <= 0) {
-      alert("This item is out of stock");
-      return;
-    }
-
-    const existing = cart.find((cartItem) => cartItem._id === item._id);
-
+    const existing = cart.find((c) => c._id === item._id);
     if (existing) {
-      if (existing.qty >= Number(item.stock)) return;
-      setCart(
-        cart.map((cartItem) =>
-          cartItem._id === item._id
-            ? { ...cartItem, qty: cartItem.qty + 1, amount: (cartItem.qty + 1) * Number(item.selling_price) }
-            : cartItem
-        )
-      );
+      setCart(cart.map((c) => c._id === item._id ? { ...c, qty: c.qty + 1, amount: (c.qty + 1) * item.selling_price } : c));
     } else {
-      setCart([...cart, { ...item, qty: 1, amount: Number(item.selling_price) || 0 }]);
+      setCart([...cart, { ...item, qty: 1, amount: item.selling_price }]);
     }
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const discountAmount = (subtotal * Number(discount)) / 100;
+  const removeFromCart = (id) => setCart(cart.filter((c) => c._id !== id));
+
+  const subtotal = cart.reduce((acc, curr) => acc + curr.amount, 0);
+  const discountAmount = (subtotal * discount) / 100;
   const grandTotal = subtotal - discountAmount;
 
   const saveBill = async () => {
-    if (cart.length === 0) return alert("Add items first");
-
-    const billData = {
-      customer_name: customer.name,
-      customer_mobile: customer.mobile,
-      items: cart,
-      subtotal,
-      discount_percent: discount,
-      discount_amount: discountAmount,
-      grand_total: grandTotal,
-      payment_mode: paymentMode,
-    };
-
-    try {
-      const res = await fetch("https://rajni-backend.onrender.com/api/bills", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(billData),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setCart([]);
-        navigate(`/bill-print/${data.bill_id}`);
-      }
-    } catch (error) {
-      console.error("Bill save error:", error);
-    }
+    if (cart.length === 0) return alert("Cart is empty");
+    const billData = { customer, cart, subtotal, discount, grandTotal, paymentMode };
+    
+    const res = await fetch("https://rajni-backend.onrender.com/api/bills", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(billData),
+    });
+    const data = await res.json();
+    if (data.success) navigate(`/bill-print/${data.bill_id}`);
   };
 
   return (
@@ -103,50 +68,137 @@ function Billing() {
       </div>
 
       <div className="billing-layout">
+        {/* Left Side */}
         <div className="billing-left">
-          <input
-            className="search-input"
-            placeholder="Search product..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-
+          <input className="search-input" placeholder="Search product..." onChange={(e) => setSearch(e.target.value)} />
           <div className="item-list">
             {filteredItems.map((item) => (
-              <div className="card" key={item._id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <div>
-                  <strong>{item.name}</strong>
-                  <p>Stock: {item.stock}</p>
-                </div>
+              <div className="card" key={item._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px' }}>
+                <div><strong>{item.name}</strong><p>Stock: {item.stock}</p></div>
                 <button className="gold-btn" onClick={() => addToCart(item)}>Add</button>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="billing-right card">
-          <h2>Bill Cart</h2>
-          <input placeholder="Name" className="search-input" onChange={(e) => setCustomer({...customer, name: e.target.value})} />
-          <input placeholder="Mobile" className="search-input" onChange={(e) => setCustomer({...customer, mobile: e.target.value})} />
-          
-          <div className="cart-list">
-            {cart.map((item) => (
-              <div className="cart-item" key={item._id}>
-                <span>{item.name} x {item.qty}</span>
-                <span>₹{item.amount}</span>
-              </div>
-            ))}
-          </div>
+        {/* Right Side - Bill Cart */}
+        <div className="billing-right">
+          <h2>Bill Cart</h2>
 
-          <div className="total-box">
-             <p>Subtotal: ₹{subtotal}</p>
-             <p>Grand Total: ₹{grandTotal}</p>
-          </div>
+          <div className="customer-row">
+            <input
+              placeholder="Customer Name"
+              value={customer.name}
+              onChange={(e) =>
+                setCustomer({
+                  ...customer,
+                  name: e.target.value,
+                })
+              }
+            />
 
-          <button className="gold-btn" style={{ width: '100%' }} onClick={saveBill}>Save Bill</button>
-        </div>
-      </div>
-    </div>
+            <input
+              placeholder="Mobile Number"
+              value={customer.mobile}
+              onChange={(e) => {
+                const mobile = e.target.value;
+
+                setCustomer({
+                  ...customer,
+                  mobile,
+                });
+
+                searchCustomerByMobile(mobile);
+              }}
+            />
+          </div>
+
+          {customerFound && (
+            <div className="customer-found">
+              {customerFound}
+            </div>
+          )}
+
+          <div className="cart-list">
+            {cart.length === 0 ? (
+              <p>No item added</p>
+            ) : (
+              cart.map((item) => (
+                <div className="cart-item" key={item.id}>
+                  <div>
+                    <strong>{item.item_name}</strong>
+                    <p>₹{item.sale_price}</p>
+                  </div>
+
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.qty}
+                    onChange={(e) =>
+                      updateQty(item.id, e.target.value)
+                    }
+                  />
+
+                  <strong>₹{item.amount}</strong>
+
+                  <button onClick={() => removeFromCart(item.id)}>
+                    X
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="total-box">
+            <div>
+              <span>Subtotal</span>
+              <strong>₹{subtotal}</strong>
+            </div>
+
+            <div>
+              <span>Discount (%)</span>
+
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={discount}
+                onChange={(e) => setDiscount(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <span>Discount Amount</span>
+              <strong>₹{discountAmount}</strong>
+            </div>
+
+            <div>
+              <span>Grand Total</span>
+              <strong>₹{grandTotal}</strong>
+            </div>
+          </div>
+
+          <select
+            className="payment-select"
+            value={paymentMode}
+            onChange={(e) => setPaymentMode(e.target.value)}
+          >
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Card">Card</option>
+            <option value="Due">Due</option>
+          </select>
+
+          <button className="save-bill-btn" onClick={saveBill}>
+            Save Bill
+          </button>
+
+          {message && (
+            <div className="page-message">{message}</div>
+          )}
+        </div>
+     </div>
+   </div>
   );
 }
 
