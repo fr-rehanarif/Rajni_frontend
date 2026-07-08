@@ -81,125 +81,112 @@ function Billing() {
           </div>
         </div>
 
-        {/* Right Side - Bill Cart */}
-        <div className="billing-right">
-          <h2>Bill Cart</h2>
+        <div className="billing-right">
+          <h2>Bill Cart</h2>
+          <div className="customer-row">
+            <input
+              placeholder="Customer Name"
+              value={customer.name}
+              onChange={(e) =>
+                setCustomer({
+                  ...customer,
+                  name: e.target.value,
+                })
+              }
+            />
+            <input
+              placeholder="Mobile Number"
+              value={customer.mobile}
+              onChange={(e) => {
+                const mobile = e.target.value;
+                setCustomer({
+                  ...customer,
+                  mobile,
+                });
+                searchCustomerByMobile(mobile);
+              }}
+            />
+          </div>
+          {customerFound && (
+            <div className="Customer-found">
+              {customerFound}
+            </div>
+          )}
+          <div className="cart-list">
+            {cart.length === 0 ? (
+              <p>No item added</p>
+            ) : (
+              cart.map((item) => (
+                <div className="cart-item" key={item.id}>
+                  <div>
+                    <strong>{item.item_name}</strong>
+                    <p>₹{item.sale_price}</p>
+                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.qty}
+                    onChange={(e) =>
+                      updateQty(item.id, e.target.value)
+                    }
+                  />
+                  <strong>₹{item.amount}</strong>
+                  <button onClick={() => removeFromCart(item.id)}>
+                    X
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="total-box">
+            <div>
+              <span>Subtotal</span>
+              <strong>₹{subtotal}</strong>
+            </div>
+            <div>
+              <span>Discount (%)</span>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={discount}
+                onChange={(e) => setDiscount(e.target.value)}
+              />
+            </div>
+            <div>
+              <span>Discount Amount</span>
+              <strong>₹{discountAmount}</strong>
+            </div>
+            <div>
+              <span>Grand Total</span>
+              <strong>₹{grandTotal}</strong>
+            </div>
+          </div>
+          <select
+            className="payment-select"
+            value={paymentMode}
+            onChange={(e) => setPaymentMode(e.target.value)}
+          >
+            <option value="Cash">Cash</option>
 
-          <div className="customer-row">
-            <input
-              placeholder="Customer Name"
-              value={customer.name}
-              onChange={(e) =>
-                setCustomer({
-                  ...customer,
-                  name: e.target.value,
-                })
-              }
-            />
+            <option value="UPI">UPI</option>
 
-            <input
-              placeholder="Mobile Number"
-              value={customer.mobile}
-              onChange={(e) => {
-                const mobile = e.target.value;
+            <option value="Card">Card</option>
 
-                setCustomer({
-                  ...customer,
-                  mobile,
-                });
+            <option value="Due">Due</option>
 
-                searchCustomerByMobile(mobile);
-              }}
-            />
-          </div>
-
-          {customerFound && (
-            <div className="customer-found">
-              {customerFound}
-            </div>
-          )}
-
-          <div className="cart-list">
-            {cart.length === 0 ? (
-              <p>No item added</p>
-            ) : (
-              cart.map((item) => (
-                <div className="cart-item" key={item.id}>
-                  <div>
-                    <strong>{item.item_name}</strong>
-                    <p>₹{item.sale_price}</p>
-                  </div>
-
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.qty}
-                    onChange={(e) =>
-                      updateQty(item.id, e.target.value)
-                    }
-                  />
-
-                  <strong>₹{item.amount}</strong>
-
-                  <button onClick={() => removeFromCart(item.id)}>
-                    X
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="total-box">
-            <div>
-              <span>Subtotal</span>
-              <strong>₹{subtotal}</strong>
-            </div>
-
-            <div>
-              <span>Discount (%)</span>
-
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={discount}
-                onChange={(e) => setDiscount(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <span>Discount Amount</span>
-              <strong>₹{discountAmount}</strong>
-            </div>
-
-            <div>
-              <span>Grand Total</span>
-              <strong>₹{grandTotal}</strong>
-            </div>
-          </div>
-
-          <select
-            className="payment-select"
-            value={paymentMode}
-            onChange={(e) => setPaymentMode(e.target.value)}
-          >
-            <option value="Cash">Cash</option>
-            <option value="UPI">UPI</option>
-            <option value="Card">Card</option>
-            <option value="Due">Due</option>
-          </select>
-
-          <button className="save-bill-btn" onClick={saveBill}>
-            Save Bill
-          </button>
-
-          {message && (
-            <div className="page-message">{message}</div>
-          )}
-        </div>
-     </div>
-   </div>
+          </select>
+          <button className="save-bill-btn" onClick={saveBill}>
+            Save Bill
+          </button>
+          {message && (
+            <div className="page-message">{message}</div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
 export default Billing;
+
