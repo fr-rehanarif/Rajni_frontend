@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import "./Billing.css";
 
 function Billing() {
   const navigate = useNavigate();
+  const [message, setMessage] = useState("");
   const [items, setItems] = useState([]);
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
@@ -47,18 +49,64 @@ function Billing() {
   const discountAmount = (subtotal * discount) / 100;
   const grandTotal = subtotal - discountAmount;
 
+  const updateQty = (id, qty) => {
+  qty = Number(qty);
+
+  if (qty < 1) return;
+
+  setCart(
+    cart.map((item) =>
+      item._id === id
+        ? {
+            ...item,
+            qty,
+            amount: qty * item.selling_price,
+          }
+        : item
+    )
+  );
+};
+
   const saveBill = async () => {
-    if (cart.length === 0) return alert("Cart is empty");
-    const billData = { customer, cart, subtotal, discount, grandTotal, paymentMode };
-    
-    const res = await fetch("https://rajni-backend.onrender.com/api/bills", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify(billData),
-    });
+  if (cart.length === 0) {
+    alert("Cart is empty");
+    return;
+  }
+
+  try {
+    const billData = {
+      customer,
+      cart,
+      subtotal,
+      discount,
+      grandTotal,
+      paymentMode,
+    };
+
+    const res = await fetch(
+      "https://rajni-backend.onrender.com/api/bills",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(billData),
+      }
+    );
+
     const data = await res.json();
-    if (data.success) navigate(`/bill-print/${data.bill_id}`);
-  };
+
+    if (data.success) {
+      navigate(`/bill-print/${data.bill_id}`);
+    } else {
+      setMessage(data.message || "Failed to save bill");
+    }
+  } catch (err) {
+    console.error(err);
+    setMessage("Something went wrong");
+  }
+};
 
   return (
     <div className="billing-page">
@@ -95,49 +143,45 @@ function Billing() {
               }
             />
             <input
-              placeholder="Mobile Number"
-              value={customer.mobile}
-              onChange={(e) => {
-                const mobile = e.target.value;
-                setCustomer({
-                  ...customer,
-                  mobile,
-                });
-                searchCustomerByMobile(mobile);
-              }}
-            />
+  placeholder="Mobile Number"
+  value={customer.mobile}
+  onChange={(e) =>
+    setCustomer({
+      ...customer,
+      mobile: e.target.value,
+    })
+  }
+/>
           </div>
-          {customerFound && (
-            <div className="Customer-found">
-              {customerFound}
-            </div>
-          )}
           <div className="cart-list">
-            {cart.length === 0 ? (
-              <p>No item added</p>
-            ) : (
-              cart.map((item) => (
-                <div className="cart-item" key={item.id}>
-                  <div>
-                    <strong>{item.item_name}</strong>
-                    <p>₹{item.sale_price}</p>
-                  </div>
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.qty}
-                    onChange={(e) =>
-                      updateQty(item.id, e.target.value)
-                    }
-                  />
-                  <strong>₹{item.amount}</strong>
-                  <button onClick={() => removeFromCart(item.id)}>
-                    X
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
+  {cart.length === 0 ? (
+    <p>No item added</p>
+  ) : (
+    cart.map((item) => (
+      <div className="cart-item" key={item._id}>
+        <div>
+          <strong>{item.name}</strong>
+          <p>₹{item.selling_price}</p>
+        </div>
+
+        <input
+          type="number"
+          min="1"
+          value={item.qty}
+          onChange={(e) =>
+            updateQty(item._id, e.target.value)
+          }
+        />
+
+        <strong>₹{item.amount}</strong>
+
+        <button onClick={() => removeFromCart(item._id)}>
+          X
+        </button>
+      </div>
+    ))
+  )}
+</div>
           <div className="total-box">
             <div>
               <span>Subtotal</span>
