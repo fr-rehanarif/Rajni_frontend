@@ -28,6 +28,33 @@ function Billing() {
     }
   };
 
+  const searchCustomerByMobile = async (mobile) => {
+  if (mobile.length !== 10) return;
+
+  try {
+    const res = await fetch(
+      `https://rajni-backend.onrender.com/api/sales/customer/${mobile}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success && data.customer) {
+      setCustomer({
+        name: data.customer.name,
+        mobile: data.customer.mobile,
+      });
+    }
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
   useEffect(() => { fetchItems(); }, []);
 
   const filteredItems = items.filter((i) => 
@@ -35,15 +62,15 @@ function Billing() {
   );
 
   const addToCart = (item) => {
-    const existing = cart.find((c) => c._id === item._id);
+    const existing = cart.find((c) => c.id === item.id);
     if (existing) {
-      setCart(cart.map((c) => c._id === item._id ? { ...c, qty: c.qty + 1, amount: (c.qty + 1) * item.selling_price } : c));
+      setCart(cart.map((c) => c.id === item.id ? { ...c, qty: c.qty + 1, amount: (c.qty + 1) * item.selling_price } : c));
     } else {
       setCart([...cart, { ...item, qty: 1, amount: item.selling_price }]);
     }
   };
 
-  const removeFromCart = (id) => setCart(cart.filter((c) => c._id !== id));
+  const removeFromCart = (id) => setCart(cart.filter((c) => c.id !== id));
 
   const subtotal = cart.reduce((acc, curr) => acc + curr.amount, 0);
   const discountAmount = (subtotal * discount) / 100;
@@ -56,7 +83,7 @@ function Billing() {
 
   setCart(
     cart.map((item) =>
-      item._id === id
+      item.id === id
         ? {
             ...item,
             qty,
@@ -74,17 +101,26 @@ function Billing() {
   }
 
   try {
-    const billData = {
-      customer,
-      cart,
-      subtotal,
-      discount,
-      grandTotal,
-      paymentMode,
-    };
+const billData = {
+  customerName: customer.name,
+  customerMobile: customer.mobile,
+
+  items: cart.map((item) => ({
+    product_id: item.id,
+    product_name: item.name,
+    qty: item.qty,
+    rate: item.selling_price,
+    amount: item.amount,
+  })),
+
+  subtotal,
+  discountPercent: Number(discount),
+  grandTotal,
+  paymentMode,
+};
 
     const res = await fetch(
-      "https://rajni-backend.onrender.com/api/bills",
+      "https://rajni-backend.onrender.com/api/sales",
       {
         method: "POST",
         headers: {
@@ -98,7 +134,7 @@ function Billing() {
     const data = await res.json();
 
     if (data.success) {
-      navigate(`/bill-print/${data.bill_id}`);
+      navigate(`/bill-print/${data.billid}`);
     } else {
       setMessage(data.message || "Failed to save bill");
     }
@@ -121,7 +157,7 @@ function Billing() {
           <input className="search-input" placeholder="Search product..." onChange={(e) => setSearch(e.target.value)} />
           <div className="item-list">
             {filteredItems.map((item) => (
-              <div className="card" key={item._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px' }}>
+              <div className="card" key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px' }}>
                 <div><strong>{item.name}</strong><p>Stock: {item.stock}</p></div>
                 <button className="gold-btn" onClick={() => addToCart(item)}>Add</button>
               </div>
@@ -142,15 +178,19 @@ function Billing() {
                 })
               }
             />
-            <input
+<input
   placeholder="Mobile Number"
   value={customer.mobile}
-  onChange={(e) =>
+  onChange={(e) => {
+    const mobile = e.target.value;
+
     setCustomer({
       ...customer,
-      mobile: e.target.value,
-    })
-  }
+      mobile,
+    });
+
+    searchCustomerByMobile(mobile);
+  }}
 />
           </div>
           <div className="cart-list">
@@ -158,7 +198,7 @@ function Billing() {
     <p>No item added</p>
   ) : (
     cart.map((item) => (
-      <div className="cart-item" key={item._id}>
+      <div className="cart-item" key={item.id}>
         <div>
           <strong>{item.name}</strong>
           <p>₹{item.selling_price}</p>
@@ -169,13 +209,13 @@ function Billing() {
           min="1"
           value={item.qty}
           onChange={(e) =>
-            updateQty(item._id, e.target.value)
+            updateQty(item.id, e.target.value)
           }
         />
 
         <strong>₹{item.amount}</strong>
 
-        <button onClick={() => removeFromCart(item._id)}>
+        <button onClick={() => removeFromCart(item.id)}>
           X
         </button>
       </div>
