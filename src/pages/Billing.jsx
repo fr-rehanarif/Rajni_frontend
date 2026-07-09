@@ -73,7 +73,7 @@ const authHeaders = () => ({
 // ─────────────────────────────────────────────────────────────
 const ApiService = {
   async fetchProducts() {
-    const res = await fetch(`${API_BASE}/api/products`, {
+    const res = await fetch(`https://rajni-backend.onrender.com/api/products`, {
       headers: authHeaders(),
     });
     if (!res.ok) throw new Error(`Products fetch failed (${res.status})`);
@@ -81,7 +81,7 @@ const ApiService = {
   },
 
   async fetchCustomerByMobile(mobile) {
-    const res = await fetch(`${API_BASE}/api/customers/mobile/${mobile}`, {
+    const res = await fetch(`https://rajni-backend.onrender.com/api/customers/mobile/${mobile}`, {
       headers: authHeaders(),
     });
     if (res.status === 404) return null;
@@ -90,7 +90,7 @@ const ApiService = {
   },
 
   async createSale(payload) {
-    const res = await fetch(`${API_BASE}/api/sales`, {
+    const res = await fetch(`https://rajni-backend.onrender.com/api/sales`, {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify(payload),
