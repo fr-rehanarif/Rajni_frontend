@@ -114,10 +114,9 @@ const buildReceiptPayload = (customer, cartItems, summary, paymentMode, saleId) 
   items: cartItems,
   summary,
   paymentMode,
-  shopName: "Saree Elegance",
-  shopAddress: "123, Silk Market Road",
-  shopPhone: "+91 98765 43210",
-  gstin: "27AAAAA0000A1Z5",
+  shopName: "Rajni Saree Shop",
+  shopAddress: "F-32,Lado Sarai, New Delhi-110030",
+  shopPhone: "+91 9818511037",
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -453,6 +452,152 @@ export default function Billing() {
     return map;
   }, [products]);
 
+  // ────────Print Receipt Hook (Future)────────
+  const printBill = (saleId) => {
+  const printWindow = window.open("", "_blank", "width=400,height=700");
+
+  const rows = cartItems
+    .map(
+      (item) => `
+      <tr>
+        <td>${item.product_name}</td>
+        <td style="text-align:center">${item.qty}</td>
+        <td style="text-align:right">₹${item.rate}</td>
+        <td style="text-align:right">₹${item.amount}</td>
+      </tr>
+    `
+    )
+    .join("");
+
+  printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+<title>Invoice</title>
+
+<style>
+body{
+font-family:Arial,sans-serif;
+padding:20px;
+color:#000;
+}
+
+h2{
+margin:0;
+text-align:center;
+}
+
+.shop{
+text-align:center;
+font-size:13px;
+margin-bottom:20px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:15px;
+}
+
+th,td{
+padding:6px;
+border-bottom:1px dashed #999;
+font-size:13px;
+}
+
+th{
+text-align:left;
+}
+
+.total{
+margin-top:20px;
+text-align:right;
+font-size:16px;
+font-weight:bold;
+}
+
+.footer{
+margin-top:30px;
+text-align:center;
+font-size:12px;
+}
+
+hr{
+border:none;
+border-top:1px dashed #000;
+margin:15px 0;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>Rajni Saree Shop</h2>
+
+<div class="shop">
+F-32 Lado Sarai, New Delhi<br>
+Mob : +91 9818511037
+</div>
+
+<hr>
+
+<div>
+<b>Bill No:</b> ${saleId}<br>
+<b>Date:</b> ${new Date().toLocaleString("en-IN")}<br>
+<b>Customer:</b> ${customerName || "Walk In Customer"}<br>
+<b>Mobile:</b> ${customerMobile}
+</div>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Item</th>
+<th>Qty</th>
+<th>Rate</th>
+<th>Amt</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+${rows}
+
+</tbody>
+
+</table>
+
+<div class="total">
+Subtotal : ₹${summary.subtotal.toFixed(2)}<br>
+
+Discount : ${discountPct}%<br>
+
+Grand Total : ₹${summary.grandTotal.toFixed(2)}
+</div>
+
+<div class="footer">
+Thank You ❤️<br>
+Please Visit Again
+</div>
+
+<script>
+window.onload=function(){
+window.print();
+window.onafterprint=function(){
+window.close();
+}
+}
+</script>
+
+</body>
+
+</html>
+`);
+};
+
   // ─── Load Products ───────────────────────────────────────
   const loadProducts = useCallback(async () => {
     setProductsLoading(true);
@@ -619,17 +764,29 @@ export default function Billing() {
     };
 
     try {
-      const result = await ApiService.createSale(payload);
-      const saleId = result.id || result.sale_id || result.saleId || "N/A";
-      setSuccessSaleId(saleId);
-      // Reload stock in background
-      loadProducts();
-    } catch (err) {
-      setSaveError(err.message || "Failed to save bill. Please try again.");
-    } finally {
-      setSaving(false);
-      saveLockRef.current = false;
-    }
+  const result = await ApiService.createSale(payload);
+
+  const saleId =
+    result.id ||
+    result.sale_id ||
+    result.saleId ||
+    "N/A";
+
+  // Print Bill
+  printBill(saleId);
+
+  // Show Success Modal
+  setSuccessSaleId(saleId);
+
+  // Reload Products
+  loadProducts();
+
+} catch (err) {
+  setSaveError(err.message || "Failed to save bill. Please try again.");
+} finally {
+  setSaving(false);
+  saveLockRef.current = false;
+}
   };
 
   // ─── Auto-navigate after success ─────────────────────────
@@ -637,14 +794,14 @@ export default function Billing() {
     if (successSaleId === null) return;
     const timer = setTimeout(() => {
       resetBill();
-      navigate("/app/bills");
+      navigate("/app/bill-history");
     }, 2800);
     return () => clearTimeout(timer);
   }, [successSaleId, navigate, resetBill]);
 
   const handleSuccessClose = () => {
     resetBill();
-    navigate("/app/bills");
+    navigate("/app/bill-history");
   };
 
   // ─────────────────────────────────────────────────────────
