@@ -17,7 +17,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import api from "./services/api.js";
+import api from "../services/api";
 import "./BillHistory.css";
 
 /* ──────────────────────────────────────────────────────────────
