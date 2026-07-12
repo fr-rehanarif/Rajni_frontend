@@ -26,14 +26,13 @@ import "./BillHistory.css";
 
 const STORE = {
   name: "Rajni Saree Center",
-  tagline: "LUXURY BOUTIQUE",
-  address: "Shop No. 12, Silk Market Complex,\nMahalaxmi Road, Surat — 395 003",
-  phone: "+91 98765 43210",
-  gstin: "24AABCS1429B1Z9",
-  email: "info@rajnisaree.com",
+  tagline: "SAREE & ETHNIC WEAR",
+  address: "F-232, Lado Sarai,\nNew Delhi — 110030",
+  phone: "98186 02584",
 };
 
 const PAYMENT_MODES = ["All", "Cash", "UPI", "Card", "Other"];
+const DATE_FILTERS = ["Today", "This Week", "This Month"];
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
   { value: "oldest", label: "Oldest First" },
@@ -48,7 +47,7 @@ const SORT_OPTIONS = [
 function normalizeSale(sale) {
   return {
     id:             sale.id          ?? sale.sale_id    ?? sale._id ?? null,
-    billNumber:     sale.bill_number ?? sale.billNumber ?? sale.invoice_number ?? `BILL-${sale.id}`,
+    billNumber:     sale.bill_no ?? sale.bill_number ?? sale.billNumber ?? sale.invoice_number ?? `BILL-${sale.id}`,
     customerName:   sale.customer_name ?? sale.customerName ?? sale.name ?? "Walk-in Customer",
     customerMobile: sale.customer_mobile ?? sale.mobile ?? sale.phone ?? "",
     customerAddress:sale.customer_address ?? sale.address ?? "",
@@ -56,6 +55,7 @@ function normalizeSale(sale) {
     items:          sale.items         ?? sale.sale_items ?? [],
     subTotal:       parseFloat(sale.sub_total   ?? sale.subTotal  ?? sale.subtotal  ?? 0),
     discount:       parseFloat(sale.discount    ?? sale.discount_amount ?? 0),
+    discountPercent:parseFloat(sale.discount_percent ?? sale.discountPercent ?? 0),
     grandTotal:     parseFloat(sale.grand_total ?? sale.grandTotal ?? sale.total    ?? 0),
     date:           sale.date          ?? sale.created_at ?? sale.createdAt ?? null,
     notes:          sale.notes         ?? sale.remark     ?? "",
@@ -137,6 +137,36 @@ function isToday(dateStr) {
       d.getMonth() === t.getMonth() &&
       d.getDate() === t.getDate()
     );
+  } catch {
+    return false;
+  }
+}
+
+/** Check if a date falls within the current calendar week (Mon–Sun) */
+function isThisWeek(dateStr) {
+  if (!dateStr) return false;
+  try {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const day = (now.getDay() + 6) % 7; // Mon=0 ... Sun=6
+    const monday = new Date(now);
+    monday.setHours(0, 0, 0, 0);
+    monday.setDate(now.getDate() - day);
+    const nextMonday = new Date(monday);
+    nextMonday.setDate(monday.getDate() + 7);
+    return d >= monday && d < nextMonday;
+  } catch {
+    return false;
+  }
+}
+
+/** Check if a date falls within the current calendar month */
+function isThisMonth(dateStr) {
+  if (!dateStr) return false;
+  try {
+    const d = new Date(dateStr);
+    const t = new Date();
+    return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth();
   } catch {
     return false;
   }
@@ -422,10 +452,7 @@ function InvoicePreview({ bill }) {
                 <div key={i}>{line}</div>
               ))}
               <div style={{ marginTop: "4px" }}>
-                <strong>GSTIN:</strong> {STORE.gstin}
-              </div>
-              <div>
-                <strong>Phone:</strong> {STORE.phone}
+                <strong>Mobile:</strong> {STORE.phone}
               </div>
             </div>
           </div>
@@ -564,7 +591,9 @@ function InvoicePreview({ bill }) {
             </div>
             {bill.discount > 0 && (
               <div className="bh-totals-row bh-totals-discount">
-                <span className="bh-totals-label">Discount</span>
+                <span className="bh-totals-label">
+                  Discount{bill.discountPercent > 0 ? ` (${bill.discountPercent}%)` : ""}
+                </span>
                 <span className="bh-totals-value">− {formatCurrency(bill.discount)}</span>
               </div>
             )}
@@ -589,9 +618,25 @@ function InvoicePreview({ bill }) {
             <div className="bh-invoice-thank-you-sub">
               Visit again · {STORE.name}
             </div>
-            <div className="bh-invoice-thank-you-sub" style={{ marginTop: "2px" }}>
-              {STORE.email}
+          </div>
+        </div>
+
+        {/* Exchange policy + signature */}
+        <div className="bh-invoice-legal">
+          <div className="bh-invoice-policy">
+            <div className="bh-invoice-section-label">Exchange Policy</div>
+            <div className="bh-invoice-policy-text">
+              Exchange within 7 days with original bill. Fitted / altered /
+              washed items cannot be exchanged. No cash refunds — store
+              credit only.
             </div>
+          </div>
+          <div className="bh-invoice-signature">
+            <div className="bh-invoice-signature-line" />
+            <div className="bh-invoice-signature-label">
+              Authorized Signature
+            </div>
+            <div className="bh-invoice-signature-sub">{STORE.name}</div>
           </div>
         </div>
 
@@ -749,10 +794,28 @@ export default function BillHistory() {
 
     try {
       const response = await api.get(`/sales/${bill.id}`);
-      let raw = response.data;
-      if (raw?.data) raw = raw.data;
-      if (raw?.sale) raw = raw.sale;
-      setSelectedBill(normalizeSale(raw));
+      let payload = response.data;
+      if (payload?.data) payload = payload.data;
+
+      // Backend (getSaleById) responds with { success, sale, items }.
+      // The sale row and its line items are SIBLING fields, not nested —
+      // merge them before normalizing so the invoice table isn't empty.
+      let raw;
+      if (payload?.sale) {
+        raw = { ...payload.sale, items: payload.items ?? payload.sale.items ?? [] };
+      } else {
+        raw = payload;
+      }
+
+      const normalized = normalizeSale(raw);
+
+      // Extra safety net: if items still came back empty but the list-view
+      // bill object already had items (e.g. legacy endpoint shape), keep those.
+      if (normalized.items.length === 0 && bill.items?.length > 0) {
+        normalized.items = bill.items;
+      }
+
+      setSelectedBill(normalized);
     } catch {
       // Graceful fallback: use already-loaded list data
       setSelectedBill(bill);
@@ -807,6 +870,10 @@ export default function BillHistory() {
     // Apply filter
     if (activeFilter === "Today") {
       list = list.filter((s) => isToday(s.date));
+    } else if (activeFilter === "This Week") {
+      list = list.filter((s) => isThisWeek(s.date));
+    } else if (activeFilter === "This Month") {
+      list = list.filter((s) => isThisMonth(s.date));
     } else if (activeFilter !== "All") {
       list = list.filter(
         (s) => normalizePaymentMode(s.paymentMode) === activeFilter
@@ -1034,16 +1101,18 @@ export default function BillHistory() {
         <div className="bh-filters">
           <span className="bh-filter-label">Filter:</span>
           <div className="bh-filter-group">
-            {["All", "Today", ...PAYMENT_MODES.slice(1)].map((f) => (
+            {["All", ...DATE_FILTERS, ...PAYMENT_MODES.slice(1)].map((f) => (
               <button
                 key={f}
                 className={`bh-filter-btn ${activeFilter === f ? "active" : ""}`}
                 onClick={() => setActiveFilter(f)}
               >
-                {f === "Cash"  && <Icon d={Icons.cash}       size={13} strokeWidth={2} />}
-                {f === "UPI"   && <Icon d={Icons.upi}        size={13} strokeWidth={2} />}
-                {f === "Card"  && <Icon d={Icons.creditcard} size={13} strokeWidth={2} />}
-                {f === "Today" && <Icon d={Icons.calendar}   size={13} strokeWidth={2} />}
+                {f === "Cash"       && <Icon d={Icons.cash}       size={13} strokeWidth={2} />}
+                {f === "UPI"        && <Icon d={Icons.upi}        size={13} strokeWidth={2} />}
+                {f === "Card"       && <Icon d={Icons.creditcard} size={13} strokeWidth={2} />}
+                {(f === "Today" || f === "This Week" || f === "This Month") && (
+                  <Icon d={Icons.calendar} size={13} strokeWidth={2} />
+                )}
                 {f}
                 {f !== "All" && !loading && (
                   <span style={{
@@ -1055,6 +1124,10 @@ export default function BillHistory() {
                   }}>
                     {f === "Today"
                       ? sales.filter((s) => isToday(s.date)).length
+                      : f === "This Week"
+                      ? sales.filter((s) => isThisWeek(s.date)).length
+                      : f === "This Month"
+                      ? sales.filter((s) => isThisMonth(s.date)).length
                       : f === "Cash"
                       ? sales.filter((s) => normalizePaymentMode(s.paymentMode) === "Cash").length
                       : f === "UPI"
