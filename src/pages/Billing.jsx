@@ -81,13 +81,23 @@ const ApiService = {
   },
 
   async fetchCustomerByMobile(mobile) {
-    const res = await fetch(`https://rajni-backend.onrender.com/api/customers/mobile/${mobile}`, {
+  const res = await fetch(
+    `https://rajni-backend.onrender.com/api/customers/mobile/${mobile}`,
+    {
       headers: authHeaders(),
-    });
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`Customer fetch failed (${res.status})`);
-    return res.json();
-  },
+    }
+  );
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(`Customer fetch failed (${res.status})`);
+  }
+
+  const data = await res.json();
+
+  return data.customer;   // ✅ Sirf customer object return karo
+},
 
   async createSale(payload) {
     const res = await fetch(`https://rajni-backend.onrender.com/api/sales`, {
